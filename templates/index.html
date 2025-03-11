@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像检索系统</title>
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+
+        }
+        .topic-img{
+
+            height:350px;
+            opacity: 0.9
+
+        }
+        .topic-image{
+            height: 100%; /* 设置高度 */
+            width: 100%; /* 设置宽度 */
+            position: relative; /* 使其可以定位内部元素 */
+            overflow: hidden; /* 防止内容溢出 */
+        }
+        h2 {
+            margin: 20px;
+            padding-left:20px;
+            font-weight:280;
+        }
+
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px auto;
+            padding: 20px;
+            max-width: 800px;
+        }
+
+        .drag-area {
+            width: 130%;
+            border: 2px dashed #b3d4fc;
+            border-radius: 10px;
+            padding: 20px 0;
+            text-align: center;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+
+        .drag-text {
+            font-size: 18px;
+            color: #333;
+            margin: 15px 0;
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin: 15px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .separator::before, .separator::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+            margin: 0 10px;
+        }
+
+        .upload-options {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            width: 100%;
+            margin-top: 10px;
+
+        }
+
+        .option-btn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 15%;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .option-btn:hover {
+            background-color: #f0f0f0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-btn i {
+            font-size: 18px;
+            margin-right: 8px;
+            color: #0077cc;
+        }
+
+        .option-text {
+            font-size: 14px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #999;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .results {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 50px auto;
+            max-width: 80%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+            width: 15%;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px #aaa;
+        }
+
+        .result img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .result p {
+            margin: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        #image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 8px;
+        margin:auto;
+            display: none;
+        }
+
+        .input-container {
+            display: none;
+            margin-top: 20px; /* 增加间距 */
+            width: 100%;
+            flex-direction: column; /* 改为垂直布局 */
+            align-items: center; /* 居中 */
+        }
+
+        .input-container input {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px; /* 增加输入框和按钮的间距 */
+        }
+
+        .input-container button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #0077cc;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .option-btn {
+                width: 45%;
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .option-btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+         .content-wrapper {
+            display: flex;
+            margin: 20px auto;
+            max-width: 1200px;
+            gap: 30px;
+        }
+
+        .query-panel {
+            width: 300px;
+            flex-shrink: 0;
+            padding-left: 60px;
+        }
+
+        .result-panel {
+            flex-grow: 1;
+        }
+
+        .query-content {
+            background: white;
+
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+
+<body>
+    <h2>视觉搜寻</h2>
+    <div class="topic-img">
+    <img class="topic-image" src="{{ url_for('static',filename='background/16-9.jpg') }}">
+    </div>
+    <div class="upload-container">
+        <div class="drag-area" id="drop-area">
+            <button class="close-btn">
+                <i class="fas fa-info-circle"></i>
+            </button>
+            <div class="drag-text">将图像拖动到此处</div>
+            <div class="separator">— 或 —</div>
+            <div class="upload-options">
+                <label for="image" class="option-btn photo">
+                    <i class="fas fa-camera"></i>
+                    <span class="option-text">拍照</span>
+                </label>
+                <label class="option-btn paste">
+                    <i class="fas fa-paste"></i>
+                    <span class="option-text">粘贴图像或URL</span>
+                </label>
+                <label for="image" class="option-btn browse">
+                    <i class="fas fa-folder-open"></i>
+                    <span class="option-text">浏览</span>
+                </label>
+                <label class="option-btn search">
+                    <i class="fas fa-search"></i>
+                    <span class="option-text">查找图像</span>
+                </label>
+            </div>
+            <div class="input-container" id="paste-input-container">
+                <input type="text" id="paste-input" placeholder="粘贴图像或输入URL">
+                <button type="button" id="paste-submit">提交</button>
+            </div>
+            <div class="input-container" id="search-input-container">
+                <input type="text" id="search-input" placeholder="输入搜索内容">
+                <button type="button" id="search-submit">搜索</button>
+            </div>
+        </div>
+    </div>
+
+    <form action="/search" method="POST" enctype="multipart/form-data" id="search-form" style="display: none;">
+        <input type="file" name="image" id="image" accept="image/*" onchange="handleFileSelect(event)">
+        <input type="text" name="text" id="text">
+        <button type="submit">搜索</button>
+    </form>
+
+    <script type="text/javascript">
+        const form = document.getElementById('search-form');
+        const dropArea = document.getElementById('drop-area');
+        const imageInput = document.getElementById('image');
+        const pasteBtn = document.querySelector('.option-btn.paste');
+        const searchBtn = document.querySelector('.option-btn.search');
+        const pasteInputContainer = document.getElementById('paste-input-container');
+        const searchInputContainer = document.getElementById('search-input-container');
+        const pasteInput = document.getElementById('paste-input');
+        const searchInput = document.getElementById('search-input');
+        const pasteSubmit = document.getElementById('paste-submit');
+        const searchSubmit = document.getElementById('search-submit');
+
+        // 拖放功能
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.classList.add('highlight');
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove('highlight');
+        }
+
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+
+            // 检查是否有文件
+            if (dt.files && dt.files.length > 0) {
+                const files = dt.files;
+                imageInput.files = files; // 将文件赋值给 input[type=file]
+                form.dispatchEvent(new Event('submit')); // 触发表单提交
+            } else {
+                console.error('拖放的内容不是文件');
+            }
+        }
+
+        // 文件选择功能
+        function handleFileSelect(e) {
+            const files = e.target.files; // 获取选择的文件
+            if (files && files.length > 0) {
+                imageInput.files = files;
+                form.dispatchEvent(new Event('submit')); // 触发表单提交
+                 console.log('文本已输入，准备提交表单'); // 调试信息
+            }
+        }
+
+        // 粘贴或URL输入
+        pasteBtn.addEventListener('click', function() {
+            pasteInputContainer.style.display = 'flex';
+            searchInputContainer.style.display = 'none';
+        });
+
+        pasteSubmit.addEventListener('click', function() {
+            const url = pasteInput.value;
+            if (url) {
+                document.getElementById('text').value = url;
+                form.dispatchEvent(new Event('submit'));
+
+            }
+        });
+
+        // 搜索功能
+        searchBtn.addEventListener('click', function() {
+            searchInputContainer.style.display = 'flex';
+            pasteInputContainer.style.display = 'none';
+        });
+
+        searchSubmit.addEventListener('click', function() {
+            const query = searchInput.value;
+            if (query) {
+                document.getElementById('text').value = query;
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch('/search', {
+                method: 'POST',
+                body: formData
+            });
+             if (response.redirected) {
+<!--        // 如果后端返回了重定向响应，手动跳转到目标 URL-->
+            window.location.href = response.url;
+            }else{
+                console.log("aa")
+            }
+
+        });
+    </script>
+</body>
+</html>
